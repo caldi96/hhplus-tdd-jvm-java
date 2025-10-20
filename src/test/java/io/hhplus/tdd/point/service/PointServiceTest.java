@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
@@ -28,14 +28,19 @@ public class PointServiceTest {
         // given 사용자 1번이 1000 포인트를 가지고 있다.
         long id = 1L;
         long amount = 2000L;
-        long point = pointService.getPoint(id, amount);
-        assertThat(point).isEqualTo(amount);
 
+        // when userPointTable 객체를 stub
         when(userPointTable.selectById(id))
                 .thenReturn(new UserPoint(id, amount, System.currentTimeMillis()));
 
+        long point = pointService.getPoint(id, amount);
+        assertThat(point).isEqualTo(amount);
+
         // table 조회
-        long tablePoint = userPointTable.selectById(id).point();
-        assertThat(tablePoint).isEqualTo(amount);
+//        long tablePoint = userPointTable.selectById(id).point();
+//        assertThat(tablePoint).isEqualTo(amount);
+
+        // TablePoint 객체의 selectedBy(id) 메서드 호출 검증
+        verify(userPointTable, times(1)).selectById(id);
     }
 }
