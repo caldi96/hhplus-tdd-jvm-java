@@ -49,5 +49,6 @@ public class PointServiceTest {
     void 유저_조회() {
         long id = 999L;
         long point = pointService.getPoint(id);
+        System.out.println(point);
     }
 }
