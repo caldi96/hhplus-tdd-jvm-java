@@ -11,10 +11,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
+    @Mock
     private UserPointTable userPointTable = new UserPointTable();
 
     @InjectMocks
@@ -28,6 +30,9 @@ public class PointServiceTest {
         long amount = 2000L;
         long point = pointService.getPoint(id, amount);
         assertThat(point).isEqualTo(amount);
+
+        when(userPointTable.selectById(id))
+                .thenReturn(new UserPoint(id, amount, System.currentTimeMillis()));
 
         // table 조회
         long tablePoint = userPointTable.selectById(id).point();
