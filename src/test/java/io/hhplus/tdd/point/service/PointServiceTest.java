@@ -26,8 +26,9 @@ public class PointServiceTest {
     void 포인트_조회_실패() {
         // given 사용자 1번이 1000 포인트를 가지고 있다.
         long id = 1L;
-        userPointTable.insertOrUpdate(id, 1000L);
-        long point = pointService.getPoint(id);
+        long amount = 1000L;
+//        userPointTable.insertOrUpdate(id, 1000L);
+        long point = pointService.getPoint(id, amount);
         assertThat(point).isEqualTo(1000L);
     }
 }
