@@ -66,6 +66,9 @@ public class PointServiceTest {
         assertThatThrownBy(() -> pointService.getPoint(invalidId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("유효하지 않는 사용자 ID입니다.");
+
+        // TablePoint 테이블이 조회되지 않았는지 확인
+        verify(userPointTable, never()).selectById(invalidId);
     }
 
 }

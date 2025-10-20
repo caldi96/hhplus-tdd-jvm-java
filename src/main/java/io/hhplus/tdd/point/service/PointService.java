@@ -12,6 +12,10 @@ public class PointService {
     private UserPointTable userPointTable;
 
     public long getPoint(long id) {
+        if (id <= 0L) {
+            throw new IllegalArgumentException("유효하지 않는 사용자 ID입니다.");
+        }
+
         UserPoint userPoint = userPointTable.selectById(id);
 
         if (userPoint == null) {
