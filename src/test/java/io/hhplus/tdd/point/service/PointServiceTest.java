@@ -2,6 +2,7 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.UserPoint;
+import org.apache.catalina.User;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,11 @@ public class PointServiceTest {
     @DisplayName("포인트 조회-유저 존재 여부 확인 실패")
     void 유저_조회() {
         long id = 999L;
-        long point = pointService.getPoint(id);
-        System.out.println(point);
+//        long point = pointService.getPoint(id);
+
+        // 예외 검증
+        assertThatThrownBy(() -> pointService.getPoint(id))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 사용자입니다.");
     }
 }
