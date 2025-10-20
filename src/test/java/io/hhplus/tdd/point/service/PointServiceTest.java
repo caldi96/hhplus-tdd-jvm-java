@@ -47,7 +47,7 @@ public class PointServiceTest {
 
     @Test
     @DisplayName("포인트 조회-유저 존재 여부 확인 실패")
-    void 유저_조회() {
+    void 존재하지_않는_사용자_예외() {
         long id = 999L;
 //        long point = pointService.getPoint(id);
 
@@ -56,4 +56,16 @@ public class PointServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("존재하지 않는 사용자입니다.");
     }
+
+    @Test
+    @DisplayName("유효하지 않은 ID로 조회 시 예외 발생")
+    void 유효하지_않는_사용자_ID_예외() {
+        long invalidId = -1L;
+
+        // 예외 검증
+        assertThatThrownBy(() -> pointService.getPoint(invalidId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않는 사용자 ID입니다.");
+    }
+
 }
