@@ -43,4 +43,11 @@ public class PointServiceTest {
         // TablePoint 객체의 selectedBy(id) 메서드 호출 검증
         verify(userPointTable, times(1)).selectById(id);
     }
+
+    @Test
+    @DisplayName("포인트 조회-유저 존재 여부 확인 실패")
+    void 유저_조회() {
+        long id = 999L;
+        long point = pointService.getPoint(id);
+    }
 }
