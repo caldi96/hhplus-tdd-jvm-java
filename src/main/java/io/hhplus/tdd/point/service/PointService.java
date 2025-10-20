@@ -10,7 +10,8 @@ public class PointService {
 
     private UserPointTable userPointTable;
 
-    public long getPoint(long id, long amount) {
-        return amount;
+    public long getPoint(long id) {
+        long point = userPointTable.selectById(id).point();
+        return point;
     }
 }

@@ -33,7 +33,7 @@ public class PointServiceTest {
         when(userPointTable.selectById(id))
                 .thenReturn(new UserPoint(id, amount, System.currentTimeMillis()));
 
-        long point = pointService.getPoint(id, amount);
+        long point = pointService.getPoint(id);
         assertThat(point).isEqualTo(amount);
 
         // table 조회
