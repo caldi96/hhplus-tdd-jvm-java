@@ -49,6 +49,9 @@ public class PointService {
 
     // 포인트 충전
     public UserPoint chargePoint(long id, long amount) {
-        return new UserPoint(id, amount, System.currentTimeMillis());
+        UserPoint userPoint = getPoint(id);
+        long newAmount = userPoint.point() + amount;
+        UserPoint newUserPoint = userPointTable.insertOrUpdate(id, newAmount);
+        return newUserPoint;
     }
 }

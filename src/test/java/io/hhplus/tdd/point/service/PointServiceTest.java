@@ -180,22 +180,25 @@ public class PointServiceTest {
         // given
         long id = 1L;
         long amount = 1000L;
-        UserPoint userPoint = new UserPoint(id, 2000L, System.currentTimeMillis());
+        long currentPoint = 2000L;
+        UserPoint mockUserPoint = new UserPoint(id, currentPoint, System.currentTimeMillis());
 
         // when
         when(userPointTable.selectById(id))
-                .thenReturn(userPoint);
+                .thenReturn(mockUserPoint);
 
-        long newAmount = pointService.getPoint(id).point() + amount;
+        long expectedPoint = currentPoint + amount;
 
-        UserPoint newUserPoint = pointService.chargePoint(id, newAmount);
+        when(userPointTable.insertOrUpdate(id, expectedPoint))
+                .thenReturn(new UserPoint(id, expectedPoint, System.currentTimeMillis()));
+
+        UserPoint newUserPoint = pointService.chargePoint(id, amount);
 
         // then
-        assertThat(newAmount).isEqualTo(3000L);
         assertThat(newUserPoint.id()).isEqualTo(id);
-        assertThat(newUserPoint.point()).isEqualTo(newAmount);
+        assertThat(newUserPoint.point()).isEqualTo(expectedPoint);
+        assertThat(newUserPoint.point()).isEqualTo(3000L);
         verify(userPointTable, times(1)).selectById(id);
-        verify(userPointTable, times(1)).insertOrUpdate(id, newAmount);
-
+        verify(userPointTable, times(1)).insertOrUpdate(id, expectedPoint);
     }
 }
