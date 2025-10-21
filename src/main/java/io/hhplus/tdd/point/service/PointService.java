@@ -46,4 +46,9 @@ public class PointService {
 
         return pointHistoryTable.selectAllByUserId(userId);
     }
+
+    // 포인트 충전
+    public UserPoint chargePoint(long id) {
+        return new UserPoint(id, 0, System.currentTimeMillis());
+    }
 }
