@@ -180,6 +180,11 @@ public class PointServiceTest {
         // given
         long id = 1L;
         long amount = 1000L;
+        UserPoint userPoint = new UserPoint(id, 2000L, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(id))
+                .thenReturn(userPoint);
 
         long newAmount = pointService.getPoint(id).point() + amount;
 
