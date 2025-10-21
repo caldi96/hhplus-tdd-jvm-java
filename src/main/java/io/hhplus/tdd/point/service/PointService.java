@@ -2,6 +2,7 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,5 +28,10 @@ public class PointService {
         }
 
         return userPoint;
+    }
+
+    // 포인트 충전/사용 내역 조회
+    public List<PointHistory> getPointHistories(long userId) {
+        return List.of(new PointHistory(1L, 1L, 1000L, TransactionType.CHARGE, System.currentTimeMillis()));
     }
 }

@@ -1,6 +1,9 @@
 package io.hhplus.tdd.point.service;
 
+import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
+import io.hhplus.tdd.point.PointHistory;
+import io.hhplus.tdd.point.TransactionType;
 import io.hhplus.tdd.point.UserPoint;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -8,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,6 +23,9 @@ public class PointServiceTest {
 
     @Mock
     private UserPointTable userPointTable;
+
+    @Mock
+    private PointHistoryTable pointHistoryTable;
 
     @InjectMocks
     private PointService pointService;
@@ -91,6 +99,6 @@ public class PointServiceTest {
     @DisplayName("포인트 충전/이용 내역 조회")
     void 포인트_충전_내역_조회_성공() {
         long userId = 1L;
-        pointService.getPointHistory(id);
+        List<PointHistory> histories = pointService.getPointHistories(userId);
     }
 }
