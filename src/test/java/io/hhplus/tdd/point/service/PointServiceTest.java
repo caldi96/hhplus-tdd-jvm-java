@@ -90,7 +90,7 @@ public class PointServiceTest {
     @Test
     @DisplayName("포인트 충전/이용 내역 조회")
     void 포인트_충전_내역_조회_성공() {
-        long id = 1L;
+        long userId = 1L;
         pointService.getPointHistory(id);
     }
 }
