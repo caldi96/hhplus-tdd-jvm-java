@@ -22,6 +22,7 @@ public class PointServiceTest {
     @InjectMocks
     private PointService pointService;
 
+    // 포인트 조회
     @Test
     @DisplayName("포인트 조회 성공")
     void 포인트_조회_성공() {
@@ -85,5 +86,11 @@ public class PointServiceTest {
         verify(userPointTable, never()).selectById(invalidId);
     }
 
-
+    // 포인트 충전/이용 내역 조회
+    @Test
+    @DisplayName("포인트 충전/이용 내역 조회")
+    void 포인트_충전_내역_조회_성공() {
+        long id = 1L;
+        pointService.getPointHistory(id);
+    }
 }
