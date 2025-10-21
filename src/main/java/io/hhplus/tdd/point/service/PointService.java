@@ -38,8 +38,12 @@ public class PointService {
             throw new IllegalArgumentException("유효하지 않는 사용자 ID입니다.");
         }
 
-        List<PointHistory> histories = pointHistoryTable.selectAllByUserId(userId);
+        // 사용자 존재 여부 확인
+        UserPoint userPoint = userPointTable.selectById(userId);
+        if (userPoint == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
+        }
 
-        return histories;
+        return pointHistoryTable.selectAllByUserId(userId);
     }
 }

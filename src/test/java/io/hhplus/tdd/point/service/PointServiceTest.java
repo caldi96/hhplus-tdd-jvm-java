@@ -11,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -23,7 +21,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
-    private static final Logger log = LoggerFactory.getLogger(PointServiceTest.class);
     @Mock
     private UserPointTable userPointTable;
 
@@ -103,6 +100,7 @@ public class PointServiceTest {
     void 포인트_충전_내역_조회_성공() {
         // given
         long userId = 1L;
+        UserPoint mockUserPoint = new UserPoint(userId, 5000L, System.currentTimeMillis());
         List<PointHistory> mockHistories = List.of(
                 new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()),
                 new PointHistory(2L, userId, 500L, TransactionType.USE, System.currentTimeMillis()),
@@ -110,17 +108,19 @@ public class PointServiceTest {
         );
 
         // when
+        when(userPointTable.selectById(userId)).thenReturn(mockUserPoint);
         when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(mockHistories);
 
         // then
         List<PointHistory> histories = pointService.getPointHistories(userId);
 
         assertThat(histories).hasSize(3);
-        assertThat(1L).isEqualTo(mockHistories.get(0).id());
-        assertThat(userId).isEqualTo(mockHistories.get(0).userId());
-        assertThat(1000L).isEqualTo(mockHistories.get(0).amount());
-        assertThat(TransactionType.CHARGE).isEqualTo(mockHistories.get(0).type());
+        assertThat(mockHistories.get(0).id()).isEqualTo(1L);
+        assertThat(mockHistories.get(0).userId()).isEqualTo(userId);
+        assertThat(mockHistories.get(0).amount()).isEqualTo(1000L);
+        assertThat(mockHistories.get(0).type()).isEqualTo(TransactionType.CHARGE);
 
+        verify(userPointTable, times(1)).selectById(userId);
         verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
     }
 
@@ -129,14 +129,17 @@ public class PointServiceTest {
     void 포인트_내역_없음() {
         // given
         long userId = 1L;
+        UserPoint mockUserPoint = new UserPoint(userId, 0L, System.currentTimeMillis());
 
         // when
+        when(userPointTable.selectById(userId)).thenReturn(mockUserPoint);
         when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(List.of());
 
         // then
         List<PointHistory> histories = pointService.getPointHistories(userId);
 
         assertThat(histories).isEmpty();
+        verify(userPointTable, times(1)).selectById(userId);
         verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
     }
 
@@ -150,5 +153,23 @@ public class PointServiceTest {
         assertThatThrownBy(() -> pointService.getPointHistories(invalidUserId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("유효하지 않는 사용자 ID입니다.");
+    }
+
+    @Test
+    @DisplayName("포인트 내역 조회 - 존재하지 않는 사용자")
+    void 포인트_내역_조회_존재하지_않는_사용자_예외() {
+        // given: 존재하지 않는 사용자
+        long userId = 999L;
+
+        // when
+        when(userPointTable.selectById(userId)).thenReturn(null);
+
+        // then
+        assertThatThrownBy(() -> pointService.getPointHistories(userId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 사용자입니다.");
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(pointHistoryTable, never()).selectAllByUserId(userId);
     }
 }
