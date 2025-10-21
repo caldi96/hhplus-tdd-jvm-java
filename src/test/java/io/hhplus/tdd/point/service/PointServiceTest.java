@@ -99,6 +99,14 @@ public class PointServiceTest {
     @DisplayName("포인트 충전/이용 내역 조회")
     void 포인트_충전_내역_조회_성공() {
         long userId = 1L;
+        List<PointHistory> mockHistories = List.of(
+                new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(2L, userId, 500L, TransactionType.USE, System.currentTimeMillis()),
+                new PointHistory(3L, userId, 2000L, TransactionType.CHARGE, System.currentTimeMillis())
+        );
+
         List<PointHistory> histories = pointService.getPointHistories(userId);
+
+        assertThat(histories).isEqualTo(mockHistories);
     }
 }
