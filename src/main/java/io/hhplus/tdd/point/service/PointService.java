@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point.service;
 
+import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.PointHistory;
 import io.hhplus.tdd.point.TransactionType;
@@ -14,6 +15,7 @@ import java.util.List;
 public class PointService {
 
     private final UserPointTable userPointTable;
+    private final PointHistoryTable pointHistoryTable;
 
     // 포인트 조회
     public UserPoint getPoint(long id) {
@@ -33,12 +35,8 @@ public class PointService {
     // 포인트 충전/사용 내역 조회
     public List<PointHistory> getPointHistories(long userId) {
 
-        List<PointHistory> mockHistories = List.of(
-                new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()),
-                new PointHistory(2L, userId, 500L, TransactionType.USE, System.currentTimeMillis()),
-                new PointHistory(3L, userId, 2000L, TransactionType.CHARGE, System.currentTimeMillis())
-        );
+        List<PointHistory> histories = pointHistoryTable.selectAllByUserId(userId);
 
-        return mockHistories;
+        return histories;
     }
 }
