@@ -139,4 +139,16 @@ public class PointServiceTest {
         assertThat(histories).isEmpty();
         verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
     }
+
+    @Test
+    @DisplayName("유효하지 않는 userId")
+    void 유효하지_않는_userId() {
+        // given
+        long invalidUserId = -1L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.getPointHistories(invalidUserId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않는 사용자 ID입니다.");
+    }
 }
