@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PointService {
 
-    private UserPointTable userPointTable;
+    private final UserPointTable userPointTable;
 
-    public long getPoint(long id) {
+    public UserPoint getPoint(long id) {
         if (id <= 0L) {
             throw new IllegalArgumentException("유효하지 않는 사용자 ID입니다.");
         }
@@ -22,6 +22,6 @@ public class PointService {
             throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
 
-        return userPoint.point();
+        return userPoint;
     }
 }

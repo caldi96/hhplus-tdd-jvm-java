@@ -2,8 +2,6 @@ package io.hhplus.tdd.point.service;
 
 import io.hhplus.tdd.database.UserPointTable;
 import io.hhplus.tdd.point.UserPoint;
-import org.apache.catalina.User;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,35 +9,36 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
     @Mock
-    private UserPointTable userPointTable = new UserPointTable();
+    private UserPointTable userPointTable;
 
     @InjectMocks
     private PointService pointService;
 
     @Test
-    @DisplayName("포인트 조회 실패")
-    void 포인트_조회_실패() {
-        // given 사용자 1번이 1000 포인트를 가지고 있다.
+    @DisplayName("포인트 조회 성공")
+    void 포인트_조회_성공() {
+        // given 사용자 1번이 2000 포인트를 가지고 있다.
         long id = 1L;
         long amount = 2000L;
+        UserPoint mockUserPoint = new UserPoint(id, amount, System.currentTimeMillis());
+
 
         // when userPointTable 객체를 stub
-        when(userPointTable.selectById(id))
-                .thenReturn(new UserPoint(id, amount, System.currentTimeMillis()));
+        when(userPointTable.selectById(id)).thenReturn(mockUserPoint);
 
-        long point = pointService.getPoint(id);
-        assertThat(point).isEqualTo(amount);
-
-        // table 조회
-//        long tablePoint = userPointTable.selectById(id).point();
-//        assertThat(tablePoint).isEqualTo(amount);
+        // then
+        UserPoint userPoint = pointService.getPoint(id);
+        assertThat(userPoint).isNotNull();
+        assertThat(userPoint.id()).isEqualTo(id);
+        assertThat(userPoint.point()).isEqualTo(amount);
 
         // TablePoint 객체의 selectedBy(id) 메서드 호출 검증
         verify(userPointTable, times(1)).selectById(id);
@@ -49,7 +48,8 @@ public class PointServiceTest {
     @DisplayName("포인트 조회-유저 존재 여부 확인 실패")
     void 존재하지_않는_사용자_예외() {
         long id = 999L;
-//        long point = pointService.getPoint(id);
+
+        when(userPointTable.selectById(id)).thenReturn(null);
 
         // 예외 검증
         assertThatThrownBy(() -> pointService.getPoint(id))
@@ -70,5 +70,20 @@ public class PointServiceTest {
         // TablePoint 테이블이 조회되지 않았는지 확인
         verify(userPointTable, never()).selectById(invalidId);
     }
+
+    @Test
+    @DisplayName("ID가 0인 경우 예외 발생_경계값 테스트")
+    void ID가_0인_경우_예외() {
+        long invalidId = 0L;
+
+        // 예외 검증
+        assertThatThrownBy(() -> pointService.getPoint(invalidId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않는 사용자 ID입니다.");
+
+        // TablePoint 테이블이 조회되지 않았는지 확인
+        verify(userPointTable, never()).selectById(invalidId);
+    }
+
 
 }
