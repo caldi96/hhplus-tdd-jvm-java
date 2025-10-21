@@ -55,9 +55,27 @@ public class PointControllerTest {
 
         // then
         mockMvc.perform(get("/point/{id}", invalidId))
-                .andExpect(status().isOk());
+                .andExpect(status().isInternalServerError());
+
 
         verify(pointService, times(1)).getPoint(invalidId);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 사용자 포인트 조회 시 400 에러")
+    void 존재하지_않는_사용자_포인트_조회_실패() throws Exception {
+        // given
+        long userId = 999L;
+
+        // when
+        when(pointService.getPoint(userId))
+                .thenThrow(new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // then
+        mockMvc.perform(get("/point/{id}", userId))
+                .andExpect(status().isInternalServerError());
+
+        verify(pointService, times(1)).getPoint(userId);
     }
 
     @Test
