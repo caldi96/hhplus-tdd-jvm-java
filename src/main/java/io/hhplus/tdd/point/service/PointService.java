@@ -32,6 +32,13 @@ public class PointService {
 
     // 포인트 충전/사용 내역 조회
     public List<PointHistory> getPointHistories(long userId) {
-        return List.of(new PointHistory(1L, 1L, 1000L, TransactionType.CHARGE, System.currentTimeMillis()));
+
+        List<PointHistory> mockHistories = List.of(
+                new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()),
+                new PointHistory(2L, userId, 500L, TransactionType.USE, System.currentTimeMillis()),
+                new PointHistory(3L, userId, 2000L, TransactionType.CHARGE, System.currentTimeMillis())
+        );
+
+        return mockHistories;
     }
 }

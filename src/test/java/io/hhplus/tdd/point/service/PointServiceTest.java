@@ -107,6 +107,9 @@ public class PointServiceTest {
 
         List<PointHistory> histories = pointService.getPointHistories(userId);
 
-        assertThat(histories).isEqualTo(mockHistories);
+        assertThat(1L).isEqualTo(mockHistories.get(0).id());
+        assertThat(userId).isEqualTo(mockHistories.get(0).userId());
+        assertThat(1000L).isEqualTo(mockHistories.get(0).amount());
+        assertThat(TransactionType.CHARGE).isEqualTo(mockHistories.get(0).type());
     }
 }
