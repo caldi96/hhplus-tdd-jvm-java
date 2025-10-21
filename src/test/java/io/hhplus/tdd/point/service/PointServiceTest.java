@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(PointServiceTest.class);
     @Mock
     private UserPointTable userPointTable;
 
@@ -109,6 +112,7 @@ public class PointServiceTest {
         // when
         when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(mockHistories);
 
+        // then
         List<PointHistory> histories = pointService.getPointHistories(userId);
 
         assertThat(histories).hasSize(3);
@@ -117,6 +121,22 @@ public class PointServiceTest {
         assertThat(1000L).isEqualTo(mockHistories.get(0).amount());
         assertThat(TransactionType.CHARGE).isEqualTo(mockHistories.get(0).type());
 
+        verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
+    }
+
+    @Test
+    @DisplayName("포인트 내역 없음")
+    void 포인트_내역_없음() {
+        // given
+        long userId = 1L;
+
+        // when
+        when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(List.of());
+
+        // then
+        List<PointHistory> histories = pointService.getPointHistories(userId);
+
+        assertThat(histories).isEmpty();
         verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
     }
 }
