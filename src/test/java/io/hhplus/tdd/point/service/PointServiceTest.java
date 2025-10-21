@@ -172,4 +172,14 @@ public class PointServiceTest {
         verify(userPointTable, times(1)).selectById(userId);
         verify(pointHistoryTable, never()).selectAllByUserId(userId);
     }
+
+    // 포인트 충전
+    @Test
+    @DisplayName("포인트 충전")
+    void chargePoint() {
+        // given
+        long id = 1L;
+
+        pointService.chargePoint(id);
+    }
 }
