@@ -179,7 +179,10 @@ public class PointServiceTest {
     void chargePoint() {
         // given
         long id = 1L;
+        long amount = 1000L;
 
-        pointService.chargePoint(id);
+        long newAmount = pointService.getPoint(id).point() + amount;
+
+        pointService.chargePoint(id, newAmount);
     }
 }

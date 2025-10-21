@@ -48,7 +48,7 @@ public class PointService {
     }
 
     // 포인트 충전
-    public UserPoint chargePoint(long id) {
-        return new UserPoint(id, 0, System.currentTimeMillis());
+    public UserPoint chargePoint(long id, long amount) {
+        return new UserPoint(id, amount, System.currentTimeMillis());
     }
 }
