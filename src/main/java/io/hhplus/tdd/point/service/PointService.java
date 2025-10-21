@@ -34,6 +34,9 @@ public class PointService {
 
     // 포인트 충전/사용 내역 조회
     public List<PointHistory> getPointHistories(long userId) {
+        if (userId <= 0L) {
+            throw new IllegalArgumentException("유효하지 않는 사용자 ID입니다.");
+        }
 
         List<PointHistory> histories = pointHistoryTable.selectAllByUserId(userId);
 
