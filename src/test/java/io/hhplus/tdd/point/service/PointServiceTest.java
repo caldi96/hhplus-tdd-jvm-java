@@ -188,6 +188,14 @@ public class PointServiceTest {
 
         long newAmount = pointService.getPoint(id).point() + amount;
 
-        pointService.chargePoint(id, newAmount);
+        UserPoint newUserPoint = pointService.chargePoint(id, newAmount);
+
+        // then
+        assertThat(newAmount).isEqualTo(3000L);
+        assertThat(newUserPoint.id()).isEqualTo(id);
+        assertThat(newUserPoint.point()).isEqualTo(newAmount);
+        verify(userPointTable, times(1)).selectById(id);
+        verify(userPointTable, times(1)).insertOrUpdate(id, newAmount);
+
     }
 }
