@@ -98,6 +98,7 @@ public class PointServiceTest {
     @Test
     @DisplayName("포인트 충전/이용 내역 조회")
     void 포인트_충전_내역_조회_성공() {
+        // given
         long userId = 1L;
         List<PointHistory> mockHistories = List.of(
                 new PointHistory(1L, userId, 1000L, TransactionType.CHARGE, System.currentTimeMillis()),
@@ -105,11 +106,17 @@ public class PointServiceTest {
                 new PointHistory(3L, userId, 2000L, TransactionType.CHARGE, System.currentTimeMillis())
         );
 
+        // when
+        when(pointHistoryTable.selectAllByUserId(userId)).thenReturn(mockHistories);
+
         List<PointHistory> histories = pointService.getPointHistories(userId);
 
+        assertThat(histories).hasSize(3);
         assertThat(1L).isEqualTo(mockHistories.get(0).id());
         assertThat(userId).isEqualTo(mockHistories.get(0).userId());
         assertThat(1000L).isEqualTo(mockHistories.get(0).amount());
         assertThat(TransactionType.CHARGE).isEqualTo(mockHistories.get(0).type());
+
+        verify(pointHistoryTable, times(1)).selectAllByUserId(userId);
     }
 }
