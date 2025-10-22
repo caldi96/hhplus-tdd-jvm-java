@@ -295,7 +295,7 @@ public class PointServiceTest {
         UserPoint chargedUserPoint = pointService.chargePoint(userId, amount);
 
         // then
-        assertThat(chargedUserPoint.point()).isEqualTo(2017L);
+        assertThat(chargedUserPoint.point()).isEqualTo(2010L);
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
     }
