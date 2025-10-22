@@ -396,8 +396,6 @@ public class PointServiceTest {
         assertThat(usedUserPoint.point()).isEqualTo(expectedPoint);
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
-
-        pointService.usePoint(userId, amount);
     }
 
     @Test
@@ -449,7 +447,163 @@ public class PointServiceTest {
         assertThatThrownBy(() -> pointService.usePoint(userId, amount))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
     }
 
+    // 정책적인 부분
+    // 5000 포인트부터 사용 가능, 500포인트 단위로 사용 가능, 최소 사용 포인트는 1000포인트
+    @Test
+    @DisplayName("포인트 사용 - 최소 사용 금액은 1000포인트 이상")
+    void 포인트_사용_최소_사용_금액은_1000_이상() {
+        // given
+        long userId = 1L;
+        long invalidAmount = 500L;
 
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, invalidAmount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("최소 사용 금액은 1000포인트 이상이여야 합니다. 사용 금액 : %d", invalidAmount));
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 경계값 테스트 : 사용포인트가 1000")
+    void 포인트_사용_사용_포인트가_1000_경계값() {
+        // given
+        long userId = 1L;
+        long currentPoint = 10000L;
+        long amount = 1000L;
+        long expectedPoint = currentPoint - amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint usedUserPoint = pointService.usePoint(userId, amount);
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 500포인트 단위로 사용")
+    void 포인트_사용_1000포인트_단위로_사용() {
+        // given
+        long userId = 1L;
+        long invalidAmount = 2300L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, invalidAmount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("500포인트 단위로 사용 가능합니다. 사용 금액 : %d", invalidAmount));
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 500포인트 단위 테스트")
+    void 포인트_사용_500포인트_단위_성공() {
+        // given
+        long userId = 1L;
+        long currentPoint = 10000L;
+        long amount = 2500L;
+        long expectedPoint = currentPoint - amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint usedUserPoint = pointService.usePoint(userId, amount);
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 500단위 실패 1499 포인트 사용 경계값")
+    void 포인트_사용_500단위_실패_499_경계값() {
+        long userId = 1L;
+        long invalidAmount = 1499L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, invalidAmount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("500포인트 단위로 사용 가능합니다. 사용 금액 : %d", invalidAmount));
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 보유 포인트가 5000 미만시 예외 호출")
+    void 포인트_사용_보유_포인트가_5000_미만시_예외() {
+        // given
+        long userId = 1L;
+        long currentPoint = 3000L;
+        long amount = 2000L;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("보유 포인트가 5000 이상부터 사용 가능합니다. 보유 금액 : %d", currentPoint));
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 보유 포인트가 5000일 경우 성공 경계값 테스트")
+    void 포인트_사용_보유_포인트가_5000인_경계값() {
+        // given
+        long userId = 1L;
+        long currentPoint = 5000L;
+        long amount = 2500L;
+        long expectedPoint = currentPoint - amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        pointService.usePoint(userId, amount);
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 경계값 실패 보유 포인트가 4999L")
+    void 포인트_사용_경계값_실패_보유_포인트_4999L() {
+        long userId = 1L;
+        long currentPoint = 4999L;
+        long amount = 2500L;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("보유 포인트가 5000 이상부터 사용 가능합니다. 보유 금액 : %d", currentPoint));
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
 }
