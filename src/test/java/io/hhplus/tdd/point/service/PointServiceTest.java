@@ -369,5 +369,13 @@ public class PointServiceTest {
     }
 
     // 포인트 사용
+    @Test
+    @DisplayName("포인트 사용 성공")
+    void 포인트_사용_성공() {
+        long userId = 1L;
+        long amount = 1000L;
+
+        pointService.usePoint(userId, amount);
+    }
 
 }
