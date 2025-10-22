@@ -64,4 +64,9 @@ public class PointService {
 
         return chargedUserPoint;
     }
+
+    // 포인트 사용
+    public UserPoint usePoint(long id, long amount) {
+        return new UserPoint(id, amount, System.currentTimeMillis());
+    }
 }
