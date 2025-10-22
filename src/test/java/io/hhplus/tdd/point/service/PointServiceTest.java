@@ -271,4 +271,32 @@ public class PointServiceTest {
 
     // 포인트 충전 정책 결정
     // 1000포인트 단위로 사용 가능. 5000포인트부터 사용 가능, 10포인트 단위로 충전 가능
+
+    @Test
+    @DisplayName("포인트 충전 - 10단위로 충전 가능. 1단위는 버림 ex) 17 -> 10, 1246 -> 1240")
+    void 포인트_충전_10단위로_충전() {
+        // given
+        long userId = 1L;
+        long currentPoint = 2000L;
+        long amount = 17L;
+        long ActualChargeAmount = 10L;
+        long expectedPoint = 2010L;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when
+        when(userPointTable.insertOrUpdate(userId, ActualChargeAmount))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint chargedUserPoint = pointService.chargePoint(userId, amount);
+
+        // then
+        assertThat(chargedUserPoint.point()).isEqualTo(2010L);
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, times(1)).insertOrUpdate(userId, ActualChargeAmount);
+    }
 }
