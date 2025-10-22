@@ -49,6 +49,10 @@ public class PointService {
 
     // 포인트 충전
     public UserPoint chargePoint(long id, long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("충전할 포인트는 0보다 커야합니다.");
+        }
+
         UserPoint userPoint = getPoint(id);
         long newAmount = userPoint.point() + amount;
         UserPoint newUserPoint = userPointTable.insertOrUpdate(id, newAmount);

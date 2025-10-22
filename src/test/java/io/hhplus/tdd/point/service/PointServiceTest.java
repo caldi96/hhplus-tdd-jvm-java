@@ -248,6 +248,25 @@ public class PointServiceTest {
         assertThatThrownBy(() -> pointService.chargePoint(userId, invalidAmount))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("충전할 포인트는 0보다 커야합니다.");
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(userId, invalidAmount);
+    }
+
+    @Test
+    @DisplayName("포인트 충전 - 금액이 0보다 작음")
+    void 포인트_충전_금액이_0보다_작음() {
+        // given
+        long userId = 1L;
+        long invalidAmount = -1000L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.chargePoint(userId, invalidAmount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("충전할 포인트는 0보다 커야합니다.");
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(userId, invalidAmount);
     }
 
     // 포인트 충전 정책 결정
