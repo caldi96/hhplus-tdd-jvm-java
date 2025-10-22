@@ -629,6 +629,6 @@ public class PointServiceTest {
         UserPoint chargedUserPoint = pointService.usePoint(userId, amount);
 
         // then
-        verify(pointHistoryTable, times(1)).insert(eq(userId), eq(amount), eq(TransactionType.CHARGE), anyLong());
+        verify(pointHistoryTable, times(1)).insert(eq(userId), eq(amount), eq(TransactionType.USE), anyLong());
     }
 }

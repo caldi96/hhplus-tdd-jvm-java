@@ -84,6 +84,8 @@ public class PointService {
         long newAmount = userPoint.point() - amount;
         UserPoint usedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
 
+        pointHistoryTable.insert(id, amount, TransactionType.USE, System.currentTimeMillis());
+
         return usedUserPoint;
     }
 }
