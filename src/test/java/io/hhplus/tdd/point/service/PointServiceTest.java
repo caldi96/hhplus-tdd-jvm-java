@@ -236,4 +236,20 @@ public class PointServiceTest {
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, never()).insertOrUpdate(userId, amount);
     }
+
+    @Test
+    @DisplayName("포인트 충전 - 금액이 0이하_경계값_0")
+    void 포인트_충전_금액이_0_이하() {
+        // given
+        long userId = 1L;
+        long invalidAmount = 0L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.chargePoint(userId, invalidAmount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("충전할 포인트는 0보다 커야합니다.");
+    }
+
+    // 포인트 충전 정책 결정
+    // 1000포인트 단위로 사용 가능. 5000포인트부터 사용 가능, 10포인트 단위로 충전 가능
 }
