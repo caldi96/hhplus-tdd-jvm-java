@@ -289,14 +289,14 @@ public class PointServiceTest {
                 .thenReturn(mockUserPoint);
 
         // when
-        when(userPointTable.insertOrUpdate(userId, ActualChargeAmount))
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
                 .thenReturn(expectedUserPoint);
 
         UserPoint chargedUserPoint = pointService.chargePoint(userId, amount);
 
         // then
-        assertThat(chargedUserPoint.point()).isEqualTo(2010L);
+        assertThat(chargedUserPoint.point()).isEqualTo(2017L);
         verify(userPointTable, times(1)).selectById(userId);
-        verify(userPointTable, times(1)).insertOrUpdate(userId, ActualChargeAmount);
+        verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
     }
 }
