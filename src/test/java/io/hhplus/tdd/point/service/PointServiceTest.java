@@ -279,8 +279,8 @@ public class PointServiceTest {
         long userId = 1L;
         long currentPoint = 2000L;
         long amount = 17L;
-        long ActualChargeAmount = 10L;
-        long expectedPoint = 2010L;
+        long actualChargeAmount = 10L;
+        long expectedPoint = currentPoint + actualChargeAmount;
         UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
         UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
 
@@ -298,5 +298,21 @@ public class PointServiceTest {
         assertThat(chargedUserPoint.point()).isEqualTo(2010L);
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
+    }
+
+    @Test
+    @DisplayName("포인트 충전 - 10보다 작은 금액 충전 -> 0이므로 예외 발생")
+    void 포인트_충전_10보다_작은_금액_충전() {
+        // given
+        long userId = 1L;
+        long amount = 9L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.chargePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("충전할 포인트는 0보다 커야합니다.");
+
+        verify(userPointTable, never()).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(anyLong(), anyLong());
     }
 }

@@ -49,6 +49,7 @@ public class PointService {
 
     // 포인트 충전
     public UserPoint chargePoint(long id, long amount) {
+        // 1단위는 버림
         long actualAmount = amount / 10 * 10;
 
         if (actualAmount <= 0) {
