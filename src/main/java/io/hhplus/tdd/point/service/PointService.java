@@ -67,7 +67,10 @@ public class PointService {
 
     // 포인트 사용
     public UserPoint usePoint(long id, long amount) {
+
         UserPoint userPoint = getPoint(id);
+        long currentPoint = userPoint.point();
+        if (amount > currentPoint) throw new IllegalArgumentException(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
         long newAmount = userPoint.point() - amount;
         UserPoint chargedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
 

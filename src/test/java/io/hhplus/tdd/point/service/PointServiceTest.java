@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
+    private static final Logger log = LoggerFactory.getLogger(PointServiceTest.class);
     @Mock
     private UserPointTable userPointTable;
 
@@ -396,5 +399,57 @@ public class PointServiceTest {
 
         pointService.usePoint(userId, amount);
     }
+
+    @Test
+    @DisplayName("포인트 사용 - 유효하지 않는 userId")
+    void 포인트_사용_유효하지_않는_userId() {
+        // given
+        long invalidUserId = -1L;
+        long amount = 1000L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(invalidUserId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않는 사용자 ID입니다.");
+
+        verify(userPointTable, never()).selectById(invalidUserId);
+        verify(userPointTable, never()).insertOrUpdate(invalidUserId, amount);
+    }
+
+    // 정책적인 부분
+    // 5000 포인트부터 사용 가능, 1000포인트 단위로 사용 가능
+    @Test
+    @DisplayName("포인트 사용 - 존재하지 않는 사용자 예외")
+    void 포인트_사용_존재하지_않는_사용자() {
+        // given
+        long userId = 999L;
+        long amount = 1000L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 사용자입니다.");
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(userId, amount);
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 사용 금액이 보유 금액을 초과")
+    void 포인트_사용_사용_금액이_보유_금액을_초과() {
+        long userId = 1L;
+        long currentPoint = 5000L;
+        long amount = 10000L;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when & then
+        assertThatThrownBy(() -> pointService.usePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
+    }
+
 
 }
