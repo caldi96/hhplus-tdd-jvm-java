@@ -315,4 +315,31 @@ public class PointServiceTest {
         verify(userPointTable, never()).selectById(userId);
         verify(userPointTable, never()).insertOrUpdate(anyLong(), anyLong());
     }
+
+    @Test
+    @DisplayName("포인트 충전 - 10단위 충전 -> 1단위 절삭되는거 없이 10 충전 시 10이 충전되어야 한다.")
+    void 포인트_충전_10단위_충전() {
+        // given
+        long userId = 1L;
+        long currentPoint = 2000L;
+        long amount = 10L;
+        long actualChargeAmount = amount;
+        long expectedPoint = currentPoint + actualChargeAmount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        when((userPointTable.insertOrUpdate(userId, expectedPoint)))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint chargedUserPoint = pointService.chargePoint(userId, amount);
+
+        // then
+        assertThat(chargedUserPoint.point()).isEqualTo(expectedPoint);
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
+    }
 }
