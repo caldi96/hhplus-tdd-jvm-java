@@ -365,7 +365,7 @@ public class PointServiceTest {
         when(userPointTable.insertOrUpdate(userId, expectedPoint))
                 .thenReturn(expectedUserPoint);
 
-        UserPoint chargedUserPoint = pointService.chargePoint(1L, amount);
+        UserPoint chargedUserPoint = pointService.chargePoint(userId, amount);
 
         // then
         verify(pointHistoryTable, times(1)).insert(eq(userId), eq(amount), eq(TransactionType.CHARGE), anyLong());
@@ -605,5 +605,30 @@ public class PointServiceTest {
 
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, never()).insertOrUpdate(eq(userId), anyLong());
+    }
+
+    @Test
+    @DisplayName("포인트 사용 - 사용 내역 저장")
+    void 포인트_사용_사용_내역_저장() {
+        // given
+        long userId = 1L;
+        long currentPoint = 10000L;
+        long amount = 1000L;
+        long expectedPoint = currentPoint - amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint chargedUserPoint = pointService.usePoint(userId, amount);
+
+        // then
+        verify(pointHistoryTable, times(1)).insert(eq(userId), eq(amount), eq(TransactionType.CHARGE), anyLong());
     }
 }
