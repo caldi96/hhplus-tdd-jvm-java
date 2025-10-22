@@ -144,8 +144,8 @@ public class PointServiceTest {
     }
 
     @Test
-    @DisplayName("유효하지 않는 userId")
-    void 유효하지_않는_userId() {
+    @DisplayName("포인트 내역 조회 - 유효하지 않는 userId")
+    void 포인트_내역_조회_유효하지_않는_userId() {
         // given
         long invalidUserId = -1L;
 
@@ -153,6 +153,9 @@ public class PointServiceTest {
         assertThatThrownBy(() -> pointService.getPointHistories(invalidUserId))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("유효하지 않는 사용자 ID입니다.");
+
+        verify(userPointTable, never()).selectById(invalidUserId);
+        verify(pointHistoryTable, never()).selectAllByUserId(invalidUserId);
     }
 
     @Test
@@ -175,8 +178,8 @@ public class PointServiceTest {
 
     // 포인트 충전
     @Test
-    @DisplayName("포인트 충전")
-    void chargePoint() {
+    @DisplayName("포인트 충전 성공")
+    void 포인트_충전_성공() {
         // given
         long id = 1L;
         long amount = 1000L;
@@ -200,5 +203,37 @@ public class PointServiceTest {
         assertThat(newUserPoint.point()).isEqualTo(3000L);
         verify(userPointTable, times(1)).selectById(id);
         verify(userPointTable, times(1)).insertOrUpdate(id, expectedPoint);
+    }
+
+    @Test
+    @DisplayName("포인트 충전 - 유효하지 않는 userId")
+    void 포인트_충전_유효하지_않는_userId() {
+        // given
+        long invalidUserId = -1L;
+        long amount = 1000L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.chargePoint(invalidUserId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("유효하지 않는 사용자 ID입니다.");
+
+        verify(userPointTable, never()).selectById(invalidUserId);
+        verify(userPointTable, never()).insertOrUpdate(invalidUserId, amount);
+    }
+
+    @Test
+    @DisplayName("포인트 충전 - 존재하지 않는 사용자")
+    void 포인트_충전_존재하지_않는_사용자_예외() {
+        // given
+        long userId = 999L;
+        long amount = 1000L;
+
+        // when & then
+        assertThatThrownBy(() -> pointService.chargePoint(userId, amount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("존재하지 않는 사용자입니다.");
+
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, never()).insertOrUpdate(userId, amount);
     }
 }
