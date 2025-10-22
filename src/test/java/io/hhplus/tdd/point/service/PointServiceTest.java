@@ -342,4 +342,32 @@ public class PointServiceTest {
         verify(userPointTable, times(1)).selectById(userId);
         verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
     }
+
+    @Test
+    @DisplayName("포인트 충전 - 충전 내역 저장")
+    void 포인트_충전_충전_내역_저장() {
+        // given
+        long userId = 1L;
+        long currentPoint = 2000L;
+        long amount = 1000L;
+        long expectedPoint = currentPoint + amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        // when
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint chargedUserPoint = pointService.chargePoint(1L, amount);
+
+        // then
+        verify(pointHistoryTable, times(1)).insert(eq(userId), eq(amount), eq(TransactionType.CHARGE), anyLong());
+    }
+
+    // 포인트 사용
+
 }
