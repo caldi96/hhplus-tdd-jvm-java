@@ -373,7 +373,26 @@ public class PointServiceTest {
     @DisplayName("포인트 사용 성공")
     void 포인트_사용_성공() {
         long userId = 1L;
+        long currentPoint = 10000L;
         long amount = 1000L;
+        long expectedPoint = currentPoint - amount;
+        UserPoint mockUserPoint = new UserPoint(userId, currentPoint, System.currentTimeMillis());
+        UserPoint expectedUserPoint = new UserPoint(userId, expectedPoint, System.currentTimeMillis());
+
+        // when
+        when(userPointTable.selectById(userId))
+                .thenReturn(mockUserPoint);
+
+        when(userPointTable.insertOrUpdate(userId, expectedPoint))
+                .thenReturn(expectedUserPoint);
+
+        UserPoint usedUserPoint = pointService.usePoint(userId, amount);
+
+        // then
+        assertThat(usedUserPoint.id()).isEqualTo(userId);
+        assertThat(usedUserPoint.point()).isEqualTo(expectedPoint);
+        verify(userPointTable, times(1)).selectById(userId);
+        verify(userPointTable, times(1)).insertOrUpdate(userId, expectedPoint);
 
         pointService.usePoint(userId, amount);
     }
