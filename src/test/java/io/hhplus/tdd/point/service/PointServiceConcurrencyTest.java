@@ -61,7 +61,7 @@ public class PointServiceConcurrencyTest {
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
-                    System.err.println("충전 실패: " + e.getMessage());
+                    log.error("충전 실패: " + e);
                 } finally {
                     latch.countDown();
                 }
@@ -75,6 +75,51 @@ public class PointServiceConcurrencyTest {
         UserPoint finalUserPoint = pointService.getPoint(userId);
 
         log.info("=== 동시에 여러 충전 요청 - 동시성 테스트 결과 ===");
+        log.info("성공 횟수: {}", successCount.get());
+        log.info("실패 횟수: {}", failCount.get());
+        log.info("최종 포인트: {}", finalUserPoint.point());
+        log.info("예상 포인트: {}", expectedFinalPoint);
+
+        assertThat(successCount.get()).isEqualTo(threadCount);
+        assertThat(finalUserPoint.point()).isEqualTo(expectedFinalPoint);
+    }
+
+    @Test
+    @DisplayName("동시에 여러 사용 요청 - 모든 사용이 정상 반영되어야 함")
+    void 동시_사용_요청_처리() throws InterruptedException {
+        // given
+        long userId = 1L;
+        long useAmount = 1000L; // 1000포인트씩 사용
+        int threadCount = 5; // 5개의 스레드
+        long expectedFinalPoint = 10000L - (useAmount * threadCount); // 10000 - 5000 = 5000
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        // when - 동시에 5번 사용
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try {
+                    pointService.usePoint(userId, useAmount);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    log.error("사용 실패: " + e);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        executorService.shutdown();
+
+        // then
+        UserPoint finalUserPoint = pointService.getPoint(userId);
+
+        log.info("=== 동시에 여러 사용 요청 - 동시성 테스트 결과 ===");
         log.info("성공 횟수: {}", successCount.get());
         log.info("실패 횟수: {}", failCount.get());
         log.info("최종 포인트: {}", finalUserPoint.point());
