@@ -38,4 +38,49 @@ public class PointServiceConcurrencyTest {
         // 테스트용 사용자 초기 포인트 설정 (10000 포인트)
         userPointTable.insertOrUpdate(1L, 10000L);
     }
+
+    @Test
+    @DisplayName("동시에 여러 충전 요청 - 모든 충전이 정상 반영되어야 함")
+    void 동시_충전_요청_처리() throws InterruptedException {
+        // given
+        long userId = 1L;
+        long chargeAmount = 1000L; // 1000포인트씩 충전
+        int threadCount = 10; // 10개의 스레드
+        long expectedFinalPoint = 10000L + (chargeAmount * threadCount); // 10000 + 10000 = 20000
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+
+        // when - 동시에 10번 충전
+        for (int i = 0; i < threadCount; i++) {
+            executorService.submit(() -> {
+                try {
+                    pointService.chargePoint(userId, chargeAmount);
+                    successCount.incrementAndGet();
+                } catch (Exception e) {
+                    failCount.incrementAndGet();
+                    System.err.println("충전 실패: " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        executorService.shutdown();
+
+        // then
+        UserPoint finalUserPoint = pointService.getPoint(userId);
+
+        log.info("=== 동시에 여러 충전 요청 - 동시성 테스트 결과 ===");
+        log.info("성공 횟수: {}", successCount.get());
+        log.info("실패 횟수: {}", failCount.get());
+        log.info("최종 포인트: {}", finalUserPoint.point());
+        log.info("예상 포인트: {}", expectedFinalPoint);
+
+        assertThat(successCount.get()).isEqualTo(threadCount);
+        assertThat(finalUserPoint.point()).isEqualTo(expectedFinalPoint);
+    }
 }
