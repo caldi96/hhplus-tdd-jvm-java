@@ -84,25 +84,36 @@ public class PointService {
 
     // 포인트 사용
     public UserPoint usePoint(long id, long amount) {
-        // 최소 사용금액 1000 이상
-        if (amount < 1000L) throw new IllegalArgumentException(String.format("최소 사용 금액은 1000포인트 이상이여야 합니다. 사용 금액 : %d", amount));
+        Lock lock = getUserLock(id);
+        lock.lock();
+        try {
+            // 최소 사용금액 1000 이상
+            if (amount < 1000L)
+                throw new IllegalArgumentException(String.format("최소 사용 금액은 1000포인트 이상이여야 합니다. 사용 금액 : %d", amount));
 
-        // 500 단위로 사용 가능
-        if (amount % 500L != 0) throw new IllegalArgumentException(String.format("500포인트 단위로 사용 가능합니다. 사용 금액 : %d", amount));
+            // 500 단위로 사용 가능
+            if (amount % 500L != 0)
+                throw new IllegalArgumentException(String.format("500포인트 단위로 사용 가능합니다. 사용 금액 : %d", amount));
 
-        UserPoint userPoint = getPoint(id);
-        long currentPoint = userPoint.point();
+            UserPoint userPoint = getPoint(id);
+            long currentPoint = userPoint.point();
 
-        // 보유 포인트 5000 이상일 경우 사용 가능
-        if (currentPoint < 5000L) throw new IllegalArgumentException(String.format("보유 포인트가 5000 이상부터 사용 가능합니다. 보유 금액 : %d", currentPoint));
+            // 보유 포인트 5000 이상일 경우 사용 가능
+            if (currentPoint < 5000L)
+                throw new IllegalArgumentException(String.format("보유 포인트가 5000 이상부터 사용 가능합니다. 보유 금액 : %d", currentPoint));
 
-        // 사용 금액이 현재 보유 금액보다 작아야 함
-        if (amount > currentPoint) throw new IllegalArgumentException(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
-        long newAmount = userPoint.point() - amount;
-        UserPoint usedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
+            // 사용 금액이 현재 보유 금액보다 작아야 함
+            if (amount > currentPoint)
+                throw new IllegalArgumentException(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
 
-        pointHistoryTable.insert(id, amount, TransactionType.USE, System.currentTimeMillis());
+            long newAmount = userPoint.point() - amount;
+            UserPoint usedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
 
-        return usedUserPoint;
+            pointHistoryTable.insert(id, amount, TransactionType.USE, System.currentTimeMillis());
+
+            return usedUserPoint;
+        } finally {
+            lock.unlock();
+        }
     }
 }
