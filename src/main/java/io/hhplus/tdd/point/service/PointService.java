@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +19,14 @@ public class PointService {
 
     private final UserPointTable userPointTable;
     private final PointHistoryTable pointHistoryTable;
+
+    // 사용자별 Lock을 관리하는 ConcurrentHashMap
+    private final ConcurrentHashMap<Long, ReentrantLock> userLocks = new ConcurrentHashMap<>();
+
+    // 사용자별 Lock 획득
+    private Lock getUserLock(long userId) {
+        return userLocks.computeIfAbsent(userId, id -> new ReentrantLock());
+    }
 
     // 포인트 조회
     public UserPoint getPoint(long id) {
@@ -49,20 +60,26 @@ public class PointService {
 
     // 포인트 충전
     public UserPoint chargePoint(long id, long amount) {
-        // 1단위는 버림
-        long actualAmount = amount / 10 * 10;
+        Lock lock = getUserLock(id);
+        lock.lock();
+        try {
+            // 1단위는 버림
+            long actualAmount = amount / 10 * 10;
 
-        if (actualAmount <= 0) {
-            throw new IllegalArgumentException("충전할 포인트는 0보다 커야합니다.");
+            if (actualAmount <= 0) {
+                throw new IllegalArgumentException("충전할 포인트는 0보다 커야합니다.");
+            }
+
+            UserPoint userPoint = getPoint(id);
+            long newAmount = userPoint.point() + actualAmount;
+            UserPoint chargedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
+
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
+
+            return chargedUserPoint;
+        } finally {
+            lock.unlock();
         }
-
-        UserPoint userPoint = getPoint(id);
-        long newAmount = userPoint.point() + actualAmount;
-        UserPoint chargedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
-
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, System.currentTimeMillis());
-
-        return chargedUserPoint;
     }
 
     // 포인트 사용
@@ -79,7 +96,7 @@ public class PointService {
         // 보유 포인트 5000 이상일 경우 사용 가능
         if (currentPoint < 5000L) throw new IllegalArgumentException(String.format("보유 포인트가 5000 이상부터 사용 가능합니다. 보유 금액 : %d", currentPoint));
 
-        // 사용 금액이 현재 금액보다 작아야 함
+        // 사용 금액이 현재 보유 금액보다 작아야 함
         if (amount > currentPoint) throw new IllegalArgumentException(String.format("사용 금액이 현재 금액보다 큽니다.\n현재 금액 : %d, 사용 금액 : %d", currentPoint, amount));
         long newAmount = userPoint.point() - amount;
         UserPoint usedUserPoint = userPointTable.insertOrUpdate(id, newAmount);
